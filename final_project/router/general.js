@@ -30,10 +30,14 @@ const getallBooks = new Promise((resolve, reject) => {
   
 
 // Get the book list available in the shop
-public_users.get('/',function (req, res) {
-    res.send(JSON.stringify({books},null,4));
-    return res.status(300).json({message: "Yet to be implemented"});
-});
+public_users.get('/', function(req, res) {
+    // Call the Promise using callbacks
+    getallBooks.then(function(books) {
+      return res.status(300).json({message: JSON.stringify(books, null, 4)});
+    }).catch(function(err) {
+      return res.status(500).json({error: err.message});
+    });
+  });
 
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {

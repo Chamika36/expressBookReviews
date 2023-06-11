@@ -52,8 +52,38 @@ regd_users.post("/login", (req,res) => {
 });
 
 // Add a book review
+// Add a book review
 regd_users.put("/auth/review/:isbn", (req, res) => {
-    let review= req.query.review;
+    let review = req.query.review;
+    let isbn = req.params.isbn;
+
+    // Get the username
+    let session = req.session;
+    let username = session && session.authorization['username'] ? session.authorization['username'] : null;
+    
+    // Check if the ISBN exists in the books object
+    if (isbn in books) {
+        // Check if the user has already posted a review for the book
+        if (username in books[isbn].reviews) {
+            // Modify the existing review
+            books[isbn].reviews[username] = review;
+        } else {
+            // Add a new review for the book
+            console.log("before ", books[isbn].reviews[username])
+            books[isbn].reviews[username] = review;
+            console.log("after ", books[isbn])
+        }
+
+        return res.status(300).json({
+            message: `The review for the book with ISBN ${isbn} has been added/updated.`
+        });
+    } else {
+        // Send an error response
+        res.status(404).json({ message: 'Book not found' });
+    }
+});
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
     let isbn = req.params.isbn;
 
     // get the username
@@ -63,15 +93,15 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
     if (isbn in books) {
       // Check if the user has already posted a review for the book
       if (username in books[isbn].reviews) {
-        // Modify the existing review
-        books[isbn].reviews[username] = review;
+        // deleting the existing review
+        delete books[isbn].reviews[username] ;
+        return res.status(300).json({
+            message: `The review for the book with ISBN ${isbn} has been deleted.`
+        });
       } else {
-        // Add a new review for the book
-        console.log("before ",books[isbn].reviews[username])
-        books[isbn].reviews[username] = review;
-        console.log("after ",books[isbn])
+        res.status(404).json({ message: "Review not found" });
       }
-      return res.status(300).json({message: "Successfully updated"});
+
     }
     else {
       // Send an error response
@@ -79,6 +109,7 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
     }
   }
 );
+
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
